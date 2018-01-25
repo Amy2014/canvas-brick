@@ -1,0 +1,168 @@
+<!-- Learn about this code on MDN: https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial/Basic_usage -->
+
+<html>
+
+<head>
+    <title>Canvas tutorial</title>
+    <style type="text/css">
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="canvas1" width="300" height="600" border="1px solid #000" ></canvas>
+    
+    <script type="text/javascript">
+
+        var canvas = document.getElementById('canvas1');
+        var ctx = canvas.getContext("2d");
+        var raf;
+        var running = false;
+        
+        var brick = {    //移动的板砖
+          x: 100,
+          y: 585,
+          vx: 5,
+          width: 80,
+          height:15,
+          color: 'blue',
+          draw: function() {
+            ctx.beginPath();
+            ctx.fillStyle = '#999';
+            ctx.fillRect(this.x,this.y,this.width,this.height);
+            ctx.closePath();
+          }
+        };
+        var diamond_impact = [];    //存储小方块的数组，后期修改数据
+        diamond_impact.length = 0;
+        var diamond={
+            x:5,
+            y:0,
+            width:40,
+            height:30,
+            color:'',
+            draw:function(){
+                for(var i=0;i<6;i++){
+                    for(var j=0;j<6;j++){
+                        ctx.beginPath();
+                        ctx.fillStyle='rgb('+Math.floor(Math.random()*255)+','+Math.floor(Math.random()*255)+','+Math.floor(Math.random()*255)+')';
+                        this.color = ctx.fillStyle;
+                        ctx.fillRect(this.x,this.y,this.width,this.height);
+                        ctx.closePath();
+                        var demo ={
+                            x:this.x,
+                            y:this.y,
+                            color:this.color,
+                            width:40,
+                            height:30};
+                        diamond_impact.push(demo);
+                        this.x+=50;
+                    }
+                    this.x=5;
+                    this.y+=33;
+                }
+                this.y=0;
+            }
+        }
+        var ball={
+            x:120,
+            y:573,
+            r:12,
+            vx:4,
+            vy:3,
+            color:'black',
+            draw:function(){
+                ctx.beginPath();
+                ctx.fillStyle=this.color;
+                ctx.arc(this.x,this.y,this.r,0,Math.PI*2,true);
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+        ball.draw();
+        var raf;
+        function clear() {
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+        }
+        function balldraw(){   //球打砖块消失实现
+            clear();
+            ball.draw();
+            brick.draw();
+            for(var i =0;i<diamond_impact.length;i++){
+                if(ball.x >=diamond_impact[i].x &&ball.y>=diamond_impact[i].y&& ball.x+12<=diamond_impact[i].x+45 && ball.y-12<=diamond_impact[i].y+33){
+                    ball.vy=-ball.vy;
+                    ball.vx=-ball.vx;
+                    ball.y-=ball.vy;
+                    ball.x+=ball.vx;
+                    diamond_impact.splice(i,1);
+                }
+            }
+            for(var i =0;i<diamond_impact.length;i++){           
+                ctx.beginPath();
+                ctx.fillStyle = diamond_impact[i].color;
+                ctx.fillRect(diamond_impact[i].x,diamond_impact[i].y,diamond_impact[i].width,diamond_impact[i].height);
+                ctx.closePath();
+            }
+            if(ball.y<=12){    //判断小球是否落后板上
+              ball.vy=-ball.vy;
+          }
+          if(ball.x<=12||ball.x>=288){
+              ball.vx=-ball.vx;
+          }
+          if(ball.y==573 && ball.vy<0){
+              var theX=ball.x;
+              if(theX<brick.x-5||theX>brick.x+90){
+                alert("fail");
+              }else{
+                ball.vy=-ball.vy; 
+              }
+          }
+          ball.y-=ball.vy;
+          ball.x+=ball.vx;
+          raf = window.requestAnimationFrame(balldraw);
+        }
+        function draw() {
+          ctx.clearRect(0,585,300,15);
+          if(code == "39"){
+            if (brick.x + brick.width > canvas.width) {
+                brick.x = brick.x ;
+            }else{
+                brick.x += brick.vx;
+            }        
+          } 
+          else if(code == "37"){
+            if (brick.x <=0) {
+                brick.x = 0;
+            }else{
+                brick.x -= brick.vx;
+            }
+          }
+
+        }
+        var move;
+        var code;
+        document.onmousedown=function(){
+            balldraw();
+        }
+        document.onkeydown = function(e){
+            if(e.keyCode!=code){    //判断按键是否呗重复按住
+                code = e.keyCode;
+                move = setInterval(draw, 20); 
+            }
+        }      
+        document.onkeyup=function(e){
+            window.clearInterval(move);
+            for(var i = 1; i < 1000; i++) {
+                    clearTimeout(i);
+                }
+
+            code="";   //清除原案件标志
+        };       
+        diamond.draw();
+        brick.draw();
+     </script>
+</body>
+
+</html>
